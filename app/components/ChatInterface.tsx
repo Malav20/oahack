@@ -265,7 +265,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       try {
         const jsonText = match[1].trim();
-        const json = JSON.parse(jsonText);
         jsonComponent = <CodeBlock code={jsonText} language="json" title="JSON" />;
       } catch (error) {
         console.error('Error parsing JSON:', error);
