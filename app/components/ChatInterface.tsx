@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { aiService } from '../services/ai-service';
 import { storageService } from '../services/storage-service';
 import FileUploader from './FileUploader';
+import CodeBlock from './CodeBlock';
 
 export interface Message {
   id: string;
@@ -252,6 +253,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Render individual message
   const renderMessage = (message: Message) => {
     const isUser = message.role === 'user';
+    const match = message.content.match(/```json([\s\S]*?)```/);
+    
+    // Process JSON content if found
+    let displayContent = message.content;
+    let jsonComponent = null;
+    
+    if (match) {
+      // Extract content without the JSON block
+      displayContent = message.content.replace(/```json([\s\S]*?)```/, '').trim();
+      
+      try {
+        const jsonText = match[1].trim();
+        const json = JSON.parse(jsonText);
+        jsonComponent = <CodeBlock code={jsonText} language="json" title="JSON" />;
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+      }
+    }
     
     return (
       <div 
@@ -272,7 +291,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             )}
           </div>
           <div className="min-w-0 ml-4 whitespace-pre-wrap">
-            {message.content}
+            {displayContent && <div>{displayContent}</div>}
+            {jsonComponent}
           </div>
         </div>
       </div>
