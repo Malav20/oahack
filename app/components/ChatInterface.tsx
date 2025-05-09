@@ -33,13 +33,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Helper function to validate message roles
+  const isValidRole = (role: string): role is 'user' | 'assistant' | 'system' => {
+    return role === 'user' || role === 'assistant' || role === 'system';
+  };
+
   // Load previous chat messages if any
   useEffect(() => {
     const loadMessages = async () => {
       if (chatId) {
         const savedMessages = await storageService.getChat(chatId);
         if (savedMessages && savedMessages.length > 0) {
-          setMessages(savedMessages);
+          // Create full Message objects from stored chat data which only have role and content
+          setMessages(savedMessages.map((msg) => ({
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            role: isValidRole(msg.role) ? msg.role : 'assistant',
+            content: msg.content,
+            timestamp: Date.now(), // Adding timestamp as it doesn't exist in saved messages
+          })));
         }
       }
     };
@@ -81,8 +92,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setFileText(text);
       console.log('OCR processing completed, extracted text:', text ? text.substring(0, 100) + '...' : 'No text extracted');
       return text;
-    } catch (err: any) {
-      const errorMsg = err.message || 'Error processing document with OCR';
+    } catch (err: Error | unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Error processing document with OCR';
       console.error('OCR processing error:', errorMsg);
       setError(errorMsg);
       throw new Error(errorMsg);

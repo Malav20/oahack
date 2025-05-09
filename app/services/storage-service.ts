@@ -2,8 +2,8 @@
 export interface StorageProvider {
   saveFile(file: File): Promise<string>;
   getFile(id: string): Promise<File | null>;
-  saveChat(chatId: string, messages: any[]): Promise<void>;
-  getChat(chatId: string): Promise<any[] | null>;
+  saveChat(chatId: string, messages: Array<{ role: string; content: string }>): Promise<void>;
+  getChat(chatId: string): Promise<Array<{ role: string; content: string }> | null>;
 }
 
 // LocalStorage implementation
@@ -62,7 +62,7 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  async saveChat(chatId: string, messages: any[]): Promise<void> {
+  async saveChat(chatId: string, messages: Array<{ role: string; content: string }>): Promise<void> {
     try {
       localStorage.setItem(`chat-${chatId}`, JSON.stringify(messages));
     } catch (error) {
@@ -71,7 +71,7 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  async getChat(chatId: string): Promise<any[] | null> {
+  async getChat(chatId: string): Promise<Array<{ role: string; content: string }> | null> {
     try {
       const chat = localStorage.getItem(`chat-${chatId}`);
       return chat ? JSON.parse(chat) : null;

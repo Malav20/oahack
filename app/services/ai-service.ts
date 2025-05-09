@@ -123,9 +123,9 @@ class AIService {
       }
       
       return response.data.choices[0].message.content;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error chatting with model:', error);
-      if (error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
         console.error('API error response:', {
@@ -134,14 +134,12 @@ class AIService {
           data: error.response.data
         });
         throw new Error(`API error: ${error.response.status} - ${error.response.statusText}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received:', error.request);
-        throw new Error('No response received from API');
+      } else if (error instanceof Error) {
+        console.error('API error:', error.message);
+        throw new Error(`API error: ${error.message}`);
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Request setup error:', error.message);
-        throw new Error(`Request error: ${error.message}`);
+        console.error('Unknown error:', error);
+        throw new Error('Unknown error');
       }
     }
   }

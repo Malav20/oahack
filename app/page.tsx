@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import FileUploader from './components/FileUploader';
 import ChatInterface from './components/ChatInterface';
 import ApiKeyConfig from './components/ApiKeyConfig';
 import { aiService } from './services/ai-service';
@@ -9,7 +8,6 @@ import { storageService } from './services/storage-service';
 
 export default function Home() {
   const [activeFile, setActiveFile] = useState<File | null>(null);
-  const [fileId, setFileId] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [apiConfigured, setApiConfigured] = useState(false);
@@ -42,12 +40,11 @@ export default function Home() {
       
       // Set active file and chat ID
       setActiveFile(file);
-      setFileId(id);
       setChatId(id);
       setError(null);
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error('Error saving file:', err);
-      setError(err.message || 'Error saving file');
+      setError(err instanceof Error ? err.message : 'Error saving file');
     }
   };
 
@@ -58,7 +55,6 @@ export default function Home() {
   
   const handleNewChat = () => {
     setActiveFile(null);
-    setFileId(null);
     setChatId(null);
   };
 
