@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
 
 export const runtime = 'nodejs';
+type OCRDocument =
+  | { type: 'image_url'; imageUrl: string }
+  | { type: 'document_url'; documentUrl: string };
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
   // Call the OCR API
   const ocrResult = await client.ocr.process({
     model: 'mistral-ocr-latest',
-    document: documentChunk as any
+    document: documentChunk as OCRDocument,
   });
 
   return NextResponse.json(ocrResult);

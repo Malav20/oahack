@@ -72,10 +72,10 @@ export async function POST(request: Request) {
     return new NextResponse(readable, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
-  } catch (err: any) {
+  } catch (err: Error | unknown) {
     console.error('OCR-Chat route error:', err);
     return NextResponse.json(
-      { error: err.message || 'Internal error' },
+      { error: 'Internal error' },
       { status: 500 }
     );
   }
