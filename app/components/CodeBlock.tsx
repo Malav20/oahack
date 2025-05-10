@@ -7,13 +7,13 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 interface CodeBlockProps {
   code: string;
-  language?: 'json' | 'xml' | 'bash' | 'typescript' | 'javascript';
+  language?: 'json' | 'xml' | 'markdown';
   title?: string;
 }
 
 export default function CodeBlock({
   code,
-  language = 'json',
+  language = 'markdown',
   title = language
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
