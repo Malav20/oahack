@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Plus,
-  Globe,
-  Zap,
-  Activity,
-  MoreHorizontal,
   Mic,
   Loader2,
   FileText,
@@ -33,26 +29,6 @@ export default function ChatPage() {
     const userMsg = { role: 'user', content: userMsgContent };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
-
-    // Simulate API call delay for streaming effect if not calling a real API
-    if (prompt.toLowerCase().includes("hello")) {
-        const assistantMsg = { role: 'assistant', content: '' };
-        setMessages((prev) => [...prev, assistantMsg]);
-        let fullResponse = "Hi there! How can I help you today?";
-        let currentResponse = "";
-        for (let i = 0; i < fullResponse.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, 50)); // Simulate streaming
-            currentResponse += fullResponse[i];
-            setMessages((prev) => {
-                const msgs = [...prev];
-                msgs[msgs.length - 1] = { role: 'assistant', content: currentResponse };
-                return msgs;
-            });
-        }
-        setLoading(false);
-        setPrompt('');
-        return;
-    }
 
 
     const formData = new FormData();
