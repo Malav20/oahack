@@ -249,6 +249,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setIsProcessing(false);
     }
   };
+  
 
 const renderMessage = (message: Message) => {
   const isUser = message.role === 'user';
