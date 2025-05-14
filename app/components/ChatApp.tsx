@@ -6,7 +6,7 @@ import {
   X,
   SendHorizontal,
 } from 'lucide-react';
-import CodeBlock from './CodeBlock'; // Import the CodeBlock component
+import CodeBlock from './CodeBlock';
 
 // Define the system message content.
 const defaultSystemMessageContent = "You are an AI assistant helping users extract and process the documents and provide them all the necesasry information about their documents";
