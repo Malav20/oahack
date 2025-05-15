@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       {
         role: 'system',
         content: ocrContent
-          ? `You are an assistant that can answer questions based on OCR data:\n\n${ocrContent}`
+          ? `You are an assistant that can answer questions based on OCR data:\n\n${ocrContent}. Only return classification results and nothing else.`
           : 'You are an assistant.',
       },
       { role: 'user', content: prompt },
