@@ -1,52 +1,81 @@
-import { NextResponse } from "next/server";
-import { convertPdfToImages } from "@/app/lib/pdfToImages";
-import { tesseractOCR } from "@/app/lib/teserractOCR";
-import { mistralOCR } from "@/app/lib/mistralOCR";
-import { mergeVerify } from "@/app/lib/mergeVerify";
-import { redactPdf } from "@/app/lib/redactPDF";
+// File: app/api/ocr-chat/route.ts
+import { NextResponse } from 'next/server';
+import { Mistral } from '@mistralai/mistralai';
 
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
-  const form = await request.formData();
-  const file = form.get('file');
-  const prompt = form.get('prompt') as string | null;
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'Missing file' }, { status: 400 });
-  }
+  try {
+    const form = await request.formData();
+    const prompt = form.get('prompt');
 
-  const buffer = await file.arrayBuffer();
-  const pdfBuffer = Buffer.from(buffer);
-
-  // 1. Rasterize
-  const pageImages = await convertPdfToImages(pdfBuffer);
-
- // console.log("Page Images = ",pageImages);
-
-
-  // 2. Tesseract coords
-  const tessData = await Promise.all(pageImages.imageBuffers.map(img => tesseractOCR(img)));
-
-  //console.log("Tesseract Data = ",JSON.stringify(tessData));
-
-  // 3. Mistral text
-  const ocrJson = await mistralOCR(buffer);
-
-  //console.log("Mistral OCR JSON = ",ocrJson);
-
-  //4. Merge + verify via chat
-  const redactions = await mergeVerify(tessData[0].lines, ocrJson.pages[0].markdown, prompt || '');
-  
-  console.log("Redactions = ",JSON.stringify(redactions));
-
-  // 5. Redact & output PDF
-  const newPdf = await redactPdf(buffer, redactions, { heightPx: pageImages.dimensions[0].height, widthPx: pageImages.dimensions[0].width });
-  
-  // Return the redacted PDF file that can be viewed directly in Postman
-  return new NextResponse(newPdf, {
-    headers: { 
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="redacted_document.pdf"` 
+    if (typeof prompt !== 'string') {
+      return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
     }
-  });
-}
 
+    const client = new Mistral({ apiKey: process.env.NEXT_PUBLIC_MISTRAL_API_KEY! });
+
+    let ocrContent = '';
+
+    if (file instanceof File) {
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      const documentChunk =
+        file.type.startsWith('image/')
+          ? { type: 'image_url' as const, imageUrl: dataUrl }
+          : { type: 'document_url' as const, documentUrl: dataUrl };
+
+      const ocrResult = await client.ocr.process({
+        model: 'mistral-ocr-latest',
+        document: documentChunk
+      });
+
+      ocrContent = JSON.stringify(ocrResult);
+    }
+
+    const messages: Array<
+      | { role: 'system'; content: string }
+      | { role: 'user'; content: string }
+    > = [
+      {
+        role: 'system',
+        content: ocrContent
+          ? `You are an assistant that can answer questions based on OCR data:\n\n${ocrContent}`
+          : 'You are an assistant.',
+      },
+      { role: 'user', content: prompt },
+    ];
+
+    const stream = await client.chat.stream({
+      model: 'mistral-large-latest',
+      messages,
+    });
+
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const part of stream) {
+            const delta = part.data.choices[0].delta.content;
+            if (typeof delta === 'string') controller.enqueue(encoder.encode(delta));
+          }
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+
+    return new NextResponse(readable, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  } catch (err: Error | unknown) {
+    console.error('OCR-Chat route error:', err);
+    return NextResponse.json(
+      { error: 'Internal error' },
+      { status: 500 }
+    );
+  }
+}
