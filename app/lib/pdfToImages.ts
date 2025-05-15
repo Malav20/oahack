@@ -31,7 +31,7 @@ export async function convertPdfToImages(pdfBuffer) {
     const page = await browser.newPage();
 
     // Set viewport to a reasonably large size
-    await page.setViewport({ width: 1200, height: 1600 });
+    await page.setViewport({ width: 1920, height: 1080 });
 
     // Create a data URL from the PDF buffer
     const pdfDataUrl = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`;
