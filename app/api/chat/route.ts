@@ -17,23 +17,6 @@ export async function POST(request: Request) {
 
     let ocrContent = '';
 
-    if (file instanceof File) {
-      const arrayBuffer = await file.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      const dataUrl = `data:${file.type};base64,${base64}`;
-
-      const documentChunk =
-        file.type.startsWith('image/')
-          ? { type: 'image_url' as const, imageUrl: dataUrl }
-          : { type: 'document_url' as const, documentUrl: dataUrl };
-
-      const ocrResult = await client.ocr.process({
-        model: 'mistral-ocr-latest',
-        document: documentChunk
-      });
-
-      ocrContent = JSON.stringify(ocrResult);
-    }
 
     const messages: Array<
       | { role: 'system'; content: string }
