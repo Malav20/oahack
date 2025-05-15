@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { convertPdfToImages } from '@/app/lib/pdfToImages';
 
-export const maxDuration = 300; // Set timeout to 5 minutes for large PDFs
 
 export async function POST(request: Request) {
   try {
