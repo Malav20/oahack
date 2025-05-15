@@ -20,7 +20,7 @@ export async function convertPdfToImages(pdfBuffer) {
   //   args: ['--no-sandbox', '--disable-setuid-sandbox']
   // });
 
-  const brower = await puppeteer.launch({
+  const browser = await puppeteer.launch({
     args: puppeteer.defaultArgs({ args: chromium.args, headless: "shell" }),
     executablePath: await chromium.executablePath(),
     headless: "shell",
