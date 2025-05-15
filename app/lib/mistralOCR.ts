@@ -9,6 +9,6 @@ export async function mistralOCR(buffer: ArrayBuffer): Promise<any> {
     model: 'mistral-ocr-latest',
     document: { type: 'document_url', documentUrl: dataUrl }
   });
-  console.log("Mistral OCR Result = ",result);
+ // console.log("Mistral OCR Result = ",result);
   return result;
 }

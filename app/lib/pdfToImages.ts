@@ -1,10 +1,17 @@
 // pdfConverter.js
 import puppeteer from 'puppeteer';
 
+// Add type declarations for PDF.js library
+declare global {
+  interface Window {
+    pdfjsLib: any;
+  }
+}
+
 /**
  * Converts a PDF buffer to an array of image buffers
  * @param {Buffer} pdfBuffer - The PDF file as a buffer
- * @returns {Promise<Array<Buffer>>} - Array of image buffers, one for each page
+ * @returns {Promise<{numPages: number, imageBuffers: Buffer[], dimensions: {width: number, height: number, scale: number}[]}>} - Array of image buffers and dimensions, one for each page
  */
 export async function convertPdfToImages(pdfBuffer) {
   // Launch Puppeteer
@@ -39,17 +46,18 @@ export async function convertPdfToImages(pdfBuffer) {
     // Get number of pages
     const numPages = await page.evaluate(async (pdfDataUrl) => {
       // Load the PDF document
-      const loadingTask = pdfjsLib.getDocument({ data: atob(pdfDataUrl.split(',')[1]) });
+      const loadingTask = window.pdfjsLib.getDocument({ data: atob(pdfDataUrl.split(',')[1]) });
       const pdf = await loadingTask.promise;
       return pdf.numPages;
     }, pdfDataUrl);
     
     // Convert each page to an image
     const imageBuffers = [];
+    const dimensions = [];
     
     for (let i = 1; i <= numPages; i++) {
       // Render the current page
-      await page.evaluate(async (pdfDataUrl, pageNum) => {
+      const pageDimensions = await page.evaluate(async (pdfDataUrl, pageNum) => {
         // Clear previous content
         document.body.innerHTML = '';
         
@@ -59,14 +67,14 @@ export async function convertPdfToImages(pdfBuffer) {
         const ctx = canvas.getContext('2d');
         
         // Load the PDF document
-        const loadingTask = pdfjsLib.getDocument({ data: atob(pdfDataUrl.split(',')[1]) });
+        const loadingTask = window.pdfjsLib.getDocument({ data: atob(pdfDataUrl.split(',')[1]) });
         const pdf = await loadingTask.promise;
         
         // Get the page
         const page = await pdf.getPage(pageNum);
         
         // Determine scale to fit the page properly
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 1.0 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         
@@ -77,6 +85,15 @@ export async function convertPdfToImages(pdfBuffer) {
         };
         
         await page.render(renderContext).promise;
+        
+        // Return the actual dimensions and scale used for rendering
+        return {
+          width: viewport.width,
+          height: viewport.height,
+          scale: 1.0,
+          originalWidth: viewport.width,
+          originalHeight: viewport.height
+        };
       }, pdfDataUrl, i);
       
       // Take a screenshot of the rendered PDF page
@@ -86,11 +103,13 @@ export async function convertPdfToImages(pdfBuffer) {
       });
       
       imageBuffers.push(imageBuffer);
+      dimensions.push(pageDimensions);
     }
     
     return {
       numPages,
-      imageBuffers
+      imageBuffers,
+      dimensions
     };
   } finally {
     await browser.close();

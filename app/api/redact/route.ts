@@ -20,13 +20,13 @@ export async function POST(request: Request) {
   // 1. Rasterize
   const pageImages = await convertPdfToImages(pdfBuffer);
 
-  console.log("Page Images = ",pageImages);
+ // console.log("Page Images = ",pageImages);
 
 
   // 2. Tesseract coords
   const tessData = await Promise.all(pageImages.imageBuffers.map(img => tesseractOCR(img)));
 
-  //console.log("Tesseract Data = ",tessData);
+  //console.log("Tesseract Data = ",JSON.stringify(tessData));
 
   // 3. Mistral text
   const ocrJson = await mistralOCR(buffer);
@@ -34,15 +34,19 @@ export async function POST(request: Request) {
   //console.log("Mistral OCR JSON = ",ocrJson);
 
   //4. Merge + verify via chat
-  const redactions = await mergeVerify(tessData, ocrJson, prompt || '');
+  const redactions = await mergeVerify(tessData[0].lines, ocrJson.pages[0].markdown, prompt || '');
   
-  console.log("Redactions = ",redactions);
+  console.log("Redactions = ",JSON.stringify(redactions));
 
-  // // 5. Redact & output PDF
-  // const newPdf = await redactPdf(buffer, redactions);
-
-  return new NextResponse('Converted', {
-    headers: { 'Content-Type': 'application/pdf' }
+  // 5. Redact & output PDF
+  const newPdf = await redactPdf(buffer, redactions, { heightPx: pageImages.dimensions[0].height, widthPx: pageImages.dimensions[0].width });
+  
+  // Return the redacted PDF file that can be viewed directly in Postman
+  return new NextResponse(newPdf, {
+    headers: { 
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="redacted_document.pdf"` 
+    }
   });
 }
 
