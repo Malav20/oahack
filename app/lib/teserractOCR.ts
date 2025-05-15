@@ -2,9 +2,7 @@ export async function tesseractOCR(imageBuffer: Buffer): Promise<{ lines: any[] 
   // Import dynamically only when needed
   const { createWorker } = await import('tesseract.js');
 
-  const worker = await createWorker("eng", 1, {
-    workerPath: "./node_modules/tesseract.js/src/worker-script/node/index.js",
-  });
+  const worker = await createWorker("eng", 1);
 
   // Request TSV output
   const { data } = await worker.recognize(imageBuffer, {}, { tsv: true });
