@@ -141,12 +141,12 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#202123] flex flex-col items-center justify-between p-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-between p-4">
       <div className="w-full max-w-3xl flex-grow flex flex-col justify-center">
         {!messages.length && !loading && (
-          <h1 className="text-neutral-100 text-4xl font-medium text-center my-auto pb-10">
-            I am Glyph!!, a document processing AI 
-          </h1>
+          <h3 className="text-2xl font-medium text-center my-auto pb-10 text-gray-800">
+            Hi Pete! Glyph here, please send me a document to Process
+          </h3>
         )}
       </div>
 
@@ -160,8 +160,8 @@ export default function ChatPage() {
               <div
                 className={`px-4 py-2.5 rounded-xl max-w-[85%] whitespace-pre-wrap break-words shadow-sm ${
                   msg.role === 'assistant'
-                    ? 'bg-neutral-700 text-neutral-100 rounded-br-sm'
-                    : 'bg-sky-600 text-white rounded-bl-sm'
+                    ? 'bg-gray-100 text-gray-900 rounded-br-sm'
+                    : 'bg-blue-500 text-white rounded-bl-sm'
                 }`}
               >
                 {msg.role === 'assistant' ? (
@@ -182,7 +182,7 @@ export default function ChatPage() {
                 <button
                   key={i}
                   onClick={() => handleSuggestionClick(q)}
-                  className="bg-neutral-700/80 text-neutral-200 hover:bg-neutral-600 rounded-full text-xs font-medium py-1.5 px-3"
+                  className="text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-medium py-1.5 px-3"
                 >
                   {q}
                 </button>
@@ -193,28 +193,28 @@ export default function ChatPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col space-y-3 pb-2">
           {file && (
-            <div className="flex items-center bg-neutral-700 border border-neutral-600 rounded-lg px-3 py-2">
+            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
               <FileText size={22} className="text-pink-500" />
               <div className="ml-3 mr-2 flex-1">
-                <div className="text-neutral-100 font-medium truncate">{file.name}</div>
-                <div className="text-neutral-400 text-xs">
+                <div className="text-gray-900 font-medium truncate">{file.name}</div>
+                <div className="text-gray-500 text-xs">
                   {file.type.split('/')[1]?.toUpperCase() || 'FILE'} - {(
                     file.size / 1024
                   ).toFixed(2)} KB
                 </div>
               </div>
-              <button type="button" onClick={removeFile} className="p-1.5 hover:bg-neutral-600 rounded-full">
-                <X size={18} className="text-neutral-400" />
+              <button type="button" onClick={removeFile} className="p-1.5 hover:bg-gray-200 rounded-full">
+                <X size={18} className="text-gray-400" />
               </button>
             </div>
           )}
-          <div className="flex items-center rounded-full bg-neutral-800 p-2.5 space-x-2 shadow-lg border border-neutral-700/50">
+          <div className="flex items-center rounded-full p-2.5 space-x-2 shadow-lg border border-gray-300 bg-white">
             <button
               type="button"
               onClick={openFileBrowser}
-              className="p-2 hover:bg-neutral-700 rounded-full"
+              className="p-2 hover:bg-gray-200 rounded-full"
             >
-              <Plus size={20} className="text-neutral-400" />
+              <Plus size={20} className="text-gray-400" />
             </button>
             <input
               ref={fileInputRef}
@@ -229,13 +229,13 @@ export default function ChatPage() {
               value={prompt}
               onChange={handlePromptChange}
               placeholder="Ask anything..."
-              className="flex-grow bg-transparent outline-none text-neutral-100 placeholder-neutral-500 px-2 text-sm"
+              className="flex-grow bg-transparent outline-none text-gray-900 placeholder-gray-400 px-2 text-sm"
             />
             
             <button
               type="submit"
               disabled={loading || (!prompt.trim() && !file)}
-              className="p-2 bg-sky-500 hover:bg-sky-600 rounded-full disabled:bg-neutral-600"
+              className="p-2 bg-blue-500 hover:bg-blue-600 rounded-full disabled:bg-gray-300 cursor-pointer"
             >
               {loading ? (
                 <Loader2 size={20} className="animate-spin text-white" />

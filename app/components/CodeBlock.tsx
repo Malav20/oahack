@@ -1,6 +1,6 @@
 import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { prism } from 'react-syntax-highlighter/dist/cjs/styles/prism'; // use light theme
 
 /**
  * CodeBlock component parses a string that may contain fenced code blocks
@@ -36,14 +36,14 @@ export default function CodeBlock({ content }: { content: string }) {
   }
 
   return (
-    <div className="prose dark:prose-invert">
+    <div className="prose">
       {parts.map((part, i) => {
         if (part.type === 'code') {
           return (
             <SyntaxHighlighter
               key={i}
               language={part.lang}
-              style={tomorrow}
+              style={prism}
               showLineNumbers
             >
               {part.content}
