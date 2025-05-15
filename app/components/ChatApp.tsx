@@ -83,7 +83,7 @@ export default function ChatPage() {
     if (file) formData.append('file', file);
 
     // Decide endpoint based on prompt
-    const isRedact = /redact/i.test(text);
+    const isRedact = /redact/i.test(text.toLowerCase());
     const endpoint = isRedact ? '/api/redact' : '/api/ocr-chat';
 
     try {
@@ -159,6 +159,11 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-between p-4">
       <div className="w-full max-w-3xl flex-grow flex flex-col justify-center">
+        {loading && (
+          <div className="text-center my-auto pb-10 text-gray-700 text-lg font-medium">
+            Document is processing please wait...
+          </div>
+        )}
         {!messages.length && !loading && (
           <h3 className="text-2xl font-medium text-center my-auto pb-10 text-gray-800">
             Hi Pete! Glyph here, please send me a document to Process
