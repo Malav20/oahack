@@ -17,6 +17,7 @@ export default function ChatPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,6 +72,7 @@ export default function ChatPage() {
     if (!text && !file) return;
 
     setSuggestedQuestions([]);
+    setDownloadUrl(null); // Clear previous download
     const userMsg = { role: 'user', content: text || file!.name };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
@@ -80,32 +82,46 @@ export default function ChatPage() {
     formData.append('prompt', text);
     if (file) formData.append('file', file);
 
+    // Decide endpoint based on prompt
+    const isRedact = /redact/i.test(text);
+    const endpoint = isRedact ? '/api/redact' : '/api/ocr-chat';
+
     try {
-      const res = await fetch('/api/ocr-chat', { method: 'POST', body: formData });
+      const res = await fetch(endpoint, { method: 'POST', body: formData });
       if (!res.ok) throw new Error(res.statusText);
-      if (!res.body) throw new Error('No response body');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
-      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        assistantContent += decoder.decode(value, { stream: true });
+      if (isRedact) {
+        // Handle PDF download
+        const blob = await res.blob();
+        if (blob.type === 'application/pdf') {
+          const url = window.URL.createObjectURL(blob);
+          setDownloadUrl(url);
+          setMessages((prev) => [...prev, { role: 'assistant', content: 'Redaction complete. Click below to download the redacted PDF.' }]);
+        } else {
+          setMessages((prev) => [...prev, { role: 'assistant', content: 'Redaction failed or did not return a PDF.' }]);
+        }
+      } else {
+        if (!res.body) throw new Error('No response body');
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantContent = '';
+        setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          assistantContent += decoder.decode(value, { stream: true });
+          setMessages((prev) => {
+            const msgs = [...prev];
+            msgs[msgs.length - 1] = { role: 'assistant', content: assistantContent };
+            return msgs;
+          });
+        }
+        assistantContent += decoder.decode();
         setMessages((prev) => {
           const msgs = [...prev];
           msgs[msgs.length - 1] = { role: 'assistant', content: assistantContent };
           return msgs;
         });
       }
-      assistantContent += decoder.decode();
-      setMessages((prev) => {
-        const msgs = [...prev];
-        msgs[msgs.length - 1] = { role: 'assistant', content: assistantContent };
-        return msgs;
-      });
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -188,6 +204,18 @@ export default function ChatPage() {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {downloadUrl && (
+          <div className="mb-3 px-1 flex justify-center">
+            <a
+              href={downloadUrl}
+              download="redacted_document.pdf"
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow"
+            >
+              Download Redacted PDF
+            </a>
           </div>
         )}
 
